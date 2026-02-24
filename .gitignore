@@ -1,4 +1,7 @@
 /data
+venv/
 mlflow.db
 mlartifacts
 mlruns
+catboost_info/
+/plots
