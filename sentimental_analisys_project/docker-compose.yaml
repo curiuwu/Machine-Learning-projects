@@ -1,13 +1,69 @@
 services:
   postgres:
     image: postgres:15
-    container_name: mlflow_postgres
+    container_name: mlflow-postgres
     environment:
       POSTGRES_USER: mlflow
       POSTGRES_PASSWORD: mlflow
       POSTGRES_DB: mlflow
     ports:
-      -"5432:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: mlflow-minio
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9005:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    container_name: mlflow
+    depends_on:
+      - postgres
+      - minio
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_REGION: us-east-1
+      AWS_EC2_METADATA_DISABLED: "true"
+      AWS_S3_ADDRESSING_STYLE: path
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ENDPOINT_URL: http://minio:9000
+    ports:
+      - "5000:5000"
+    command:
+      [
+        "mlflow",
+        "server",
+        "--backend-store-uri",
+        "postgresql://mlflow:mlflow@postgres:5432/mlflow",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "5000",
+        "--artifacts-destination",
+        "s3://mlflow",
+        "--allowed-hosts",
+        "*",
+        "--cors-allowed-origins",
+        "*"
+      ]
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:

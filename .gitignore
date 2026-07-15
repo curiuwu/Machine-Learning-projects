@@ -8,6 +8,8 @@ catboost_info/
 /cache
 *.parquet
 *.pkl
-*/__pycache__/**/*
+__pycache__/
+*.py[cod]
+.venv/
 /F1_strategy_modeling
 *.pt
