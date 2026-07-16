@@ -9,8 +9,9 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_s
 from src.dataset.build_dataset import load_and_save_data
 from src.dataset.clean_dataset import build_clean_dataset
 from src.plots.train_curves import build_and_save_sklearn_learning_curve
+from src.plots.classification import ( build_and_save_confusion_matrix, make_classification_report,)
 
-from src.config import RAW_DATA_DIR, RAW_DATA_FILENAME, MODELS_DIR, PLOTS_DIR
+from src.config import RAW_DATA_DIR, RAW_DATA_FILENAME, MODELS_DIR, PLOTS_DIR, REPORTS_DIR
 
 import joblib
 import mlflow
@@ -95,12 +96,13 @@ def evaluate_model(model:Pipeline, X, y) -> dict[str, float]:
     recall = recall_score(y, preds, average="macro", zero_division=0)
     f1 = f1_score(y, preds, average="macro", zero_division=0)
 
-    return {
+    metrics = {
         "accuracy": acc,
         "precision_macro": precision,
         "recall_macro": recall,
         "f1_macro": f1,
     }
+    return metrics, preds
 
 def train_logreg():
     mlflow.set_experiment(EXPERIMENT_NAME)
@@ -129,8 +131,8 @@ def train_logreg():
 
         model.fit(X_train, y_train)
 
-        val_metrics = evaluate_model(model, X_val, y_val)
-        test_metrics = evaluate_model(model, X_test, y_test)
+        val_metrics, _ = evaluate_model(model, X_val, y_val)
+        test_metrics, test_preds = evaluate_model(model, X_test, y_test)
 
         mlflow.log_metrics(prefix_metrics(val_metrics, "val"))
         mlflow.log_metrics(prefix_metrics(test_metrics, "test"))
@@ -145,7 +147,27 @@ def train_logreg():
             filename="tfidf_logreg_learning_curve.png"
         )
 
+        confusion_matrix_path = build_and_save_confusion_matrix(
+            y_true=y_test,
+            y_pred=test_preds,
+            labels=[0, 1, 2],
+            class_names=["neutral", "positive", "negative"],
+            output_dir= PLOTS_DIR / "logreg",
+            filename="confusion_matrix.png"
+        )
+
+        json_report_path = make_classification_report(
+            y_true=y_test,
+            y_pred=test_preds,
+            labels=[0, 1, 2],
+            class_names=["neutral", "positive", "negative"],
+            output_dir=REPORTS_DIR / "logreg",
+            filename="classification_report.json"
+        )
+
         mlflow.log_artifact(str(learning_curve_path), artifact_path="plots")
+        mlflow.log_artifact(str(confusion_matrix_path), artifact_path="plots")
+        mlflow.log_artifact(str(json_report_path), artifact_path="reports")
 
         local_model_dir = MODELS_DIR / "logreg"
         local_model_dir.mkdir(parents=True, exist_ok=True)
