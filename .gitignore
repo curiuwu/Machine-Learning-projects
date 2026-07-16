@@ -13,3 +13,4 @@ __pycache__/
 .venv/
 /F1_strategy_modeling
 *.pt
+artifacts/

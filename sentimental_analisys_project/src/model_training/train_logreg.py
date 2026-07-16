@@ -1,9 +1,6 @@
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 
-from sklearn.model_selection import train_test_split, LearningCurveDisplay
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model  import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,8 +8,9 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_s
 
 from src.dataset.build_dataset import load_and_save_data
 from src.dataset.clean_dataset import build_clean_dataset
+from src.plots.train_curves import build_and_save_sklearn_learning_curve
 
-from src.config import RAW_DATA_DIR, RAW_DATA_FILENAME, MODELS_DIR
+from src.config import RAW_DATA_DIR, RAW_DATA_FILENAME, MODELS_DIR, PLOTS_DIR
 
 import joblib
 import mlflow
@@ -136,6 +134,18 @@ def train_logreg():
 
         mlflow.log_metrics(prefix_metrics(val_metrics, "val"))
         mlflow.log_metrics(prefix_metrics(test_metrics, "test"))
+
+        output_dir = PLOTS_DIR / "logreg"
+
+        learning_curve_path = build_and_save_sklearn_learning_curve(
+            model=model, 
+            X= X_train,
+            y=y_train,
+            output_dir=output_dir,
+            filename="tfidf_logreg_learning_curve.png"
+        )
+
+        mlflow.log_artifact(str(learning_curve_path), artifact_path="plots")
 
         local_model_dir = MODELS_DIR / "logreg"
         local_model_dir.mkdir(parents=True, exist_ok=True)
