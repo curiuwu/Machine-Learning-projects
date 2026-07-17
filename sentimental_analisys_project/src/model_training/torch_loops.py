@@ -68,7 +68,7 @@ def evaluate(model, loader, criterion, device):
     recall = recall_score(all_labels, all_preds, average="macro", zero_division=0)
     f1 = f1_score(all_labels, all_preds, average="macro", zero_division=0)
 
-    return avg_loss, accuracy, precision, recall, f1
+    return avg_loss, accuracy, precision, recall, f1, all_labels, all_preds
 
 
 
