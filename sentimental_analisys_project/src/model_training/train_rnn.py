@@ -465,6 +465,7 @@ def train_rnn() -> tuple[RNNModel, dict[str, float], dict[str, float]]:
             pytorch_model=model,
             name="model",
             registered_model_name=REGISTERED_MODEL_NAME,
+            serialization_format=mlflow.pytorch.SERIALIZATION_FORMAT_PICKLE,
         )
 
         print(f"Saved FastAPI bundle to: {local_model_dir}")
