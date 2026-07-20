@@ -5,3 +5,12 @@ mlartifacts
 mlruns
 catboost_info/
 /plots
+/cache
+*.parquet
+*.pkl
+__pycache__/
+*.py[cod]
+.venv/
+/F1_strategy_modeling
+*.pt
+artifacts/
