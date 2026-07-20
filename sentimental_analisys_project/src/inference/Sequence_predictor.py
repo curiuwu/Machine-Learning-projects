@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
+from typing import Any
 
 import joblib
 import torch
-import torch.nn.functional as F
 
 from src.dataset.clean_dataset import tokenize
 from src.embedding.build_vocab import PAD_TOKEN, UNK_TOKEN
@@ -15,7 +15,7 @@ from src.models.lstm import LSTMModel
 
 
 class SequencePredictor(BasePredictor):
-    def __init__(self, artifacts_dir: str | Path = ARTIFACTS_DIR):
+    def __init__(self, artifacts_dir: str | Path = ARTIFACTS_DIR) -> None:
         self.artifacts_dir = Path(artifacts_dir)
         self.model = None
         self.word2idx = None
@@ -24,7 +24,7 @@ class SequencePredictor(BasePredictor):
         self.max_len = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def load(self):
+    def load(self) -> None:
         self.model_config = self._load_json("model_config.json")
         self.id2label = self._load_id2label("id2label.json")
         self.word2idx = joblib.load(self.artifacts_dir / "word2idx.pkl")
@@ -46,18 +46,17 @@ class SequencePredictor(BasePredictor):
         self.model.to(self.device)
         self.model.eval()
 
-    def predict(self, text):
+    def predict(self, text: str) -> dict[str, Any]:
         if self.model is None:
             raise RuntimeError("Model is not loaded")
-        
+
         tokens, input_ids, length = self._encode_text(text)
 
         with torch.no_grad():
             logits = self.model(input_ids, length)
             probs = torch.softmax(logits, dim=1)
-            pred_id = torch.argmax(probs, dim=1).item()
+            pred_id = int(torch.argmax(probs, dim=1).item())
 
-        
         pred_label = self.id2label[pred_id]
         probabilities = {
             self.id2label[i]: float(probs[0][i].cpu())
@@ -76,15 +75,25 @@ class SequencePredictor(BasePredictor):
 
         return result
 
-    def info(self):
-        return {
-            "model_type": self.model_config["model_type"],
-            "model_path": str(self.artifacts_dir),
-            "model_loaded": self.model is not None,
-            "classes": [
+    def info(self) -> dict[str, Any]:
+        model_type = None
+        classes = []
+
+        if self.model_config is not None:
+            model_type = self.model_config.get("model_type")
+
+        if self.id2label is not None:
+            classes = [
                 self.id2label[class_id]
                 for class_id in sorted(self.id2label)
-            ],
+            ]
+
+        return {
+            "model_type": model_type,
+            "artifact_dir": str(self.artifacts_dir),
+            "model_loaded": self.model is not None,
+            "classes": classes,
+            "device": str(self.device),
         }
 
     def _build_model(self, embedding_matrix: torch.Tensor):

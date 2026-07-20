@@ -10,9 +10,14 @@ from src.inference.BasePredictor import BasePredictor
 
 
 class LogRegPredictor(BasePredictor):
-    def __init__(self, artifacts_dir: str | Path = ARTIFACTS_DIR) -> None:
+    def __init__(
+        self,
+        artifacts_dir: str | Path = ARTIFACTS_DIR,
+        model_dir: str | Path | None = None,
+    ) -> None:
         self.artifacts_dir = Path(artifacts_dir)
-        self.model_path = self.artifacts_dir / "models" / "logreg" / "tfidf_logreg.pkl"
+        self.model_dir = Path(model_dir) if model_dir is not None else self.artifacts_dir / "models" / "logreg"
+        self.model_path = self.model_dir / "tfidf_logreg.pkl"
         self.id2label = self._load_id2label()
         self.model = None
 
@@ -53,6 +58,7 @@ class LogRegPredictor(BasePredictor):
         return {
             "model_type": "tfidf_logreg",
             "model_path": str(self.model_path),
+            "artifact_dir": str(self.model_dir),
             "model_loaded": self.model is not None,
             "classes": [
                 self.id2label[class_id]
@@ -62,7 +68,7 @@ class LogRegPredictor(BasePredictor):
 
     def _load_id2label(self) -> dict[int, str]:
         candidate_paths = [
-            self.artifacts_dir / "models" / "logreg" / "id2label.json",
+            self.model_dir / "id2label.json",
             self.artifacts_dir / "models" / "rnn" / "id2label.json",
             self.artifacts_dir / "models" / "lstm" / "id2label.json",
         ]

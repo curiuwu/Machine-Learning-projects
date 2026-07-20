@@ -63,6 +63,38 @@ services:
         "*"
       ]
     restart: unless-stopped
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: sentiment-api
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_NAME: lstm
+      MODEL_ARTIFACT_DIR: /app/artifacts/models/lstm
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+      - ./src:/app/src
+    command: uvicorn src.api.app:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: sentiment-streamlit
+    depends_on:
+      - api
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src:/app/src
+    command: streamlit run src/streamlit_app/app.py --server.address=0.0.0.0 --server.port=8501
+    restart: unless-stopped
 
 volumes:
   postgres_data:
