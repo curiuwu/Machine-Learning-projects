@@ -1,16 +1,74 @@
-/data
-venv/
-mlflow.db
-mlartifacts
-mlruns
-catboost_info/
-/plots
-/cache
-*.parquet
-*.pkl
+# OS and editors
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+
+# Python cache
 __pycache__/
 *.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
 .venv/
-/F1_strategy_modeling
-*.pt
+venv/
+env/
+ENV/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Build and test outputs
+build/
+dist/
+*.egg-info/
+.coverage
+coverage.xml
+htmlcov/
+
+# Data, cache and generated artifacts
+/data/
+**/data/raw/
+**/data/interim/
+**/data/processed/
+**/data/external/
+/plots/
+/cache/
 artifacts/
+cache/
+outputs/
+runs/
+lightning_logs/
+
+# MLflow and experiment outputs
+mlflow.db
+mlruns/
+mlartifacts/
+catboost_info/
+
+# Model and data binaries
+*.parquet
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.npy
+*.npz
+*.model
+
+# Local project folders
+/F1_strategy_modeling/
