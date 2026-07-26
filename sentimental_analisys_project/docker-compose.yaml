@@ -70,8 +70,8 @@ services:
     container_name: sentiment-api
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
-      MODEL_NAME: lstm
-      MODEL_ARTIFACT_DIR: /app/artifacts/models/lstm
+      MODEL_NAME: bilstm
+      MODEL_ARTIFACT_DIR: /app/artifacts/models/bilstm
     ports:
       - "8000:8000"
     volumes:
