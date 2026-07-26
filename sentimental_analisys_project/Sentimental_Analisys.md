@@ -5,9 +5,9 @@
 Проект поддерживает два типа моделей:
 
 - классический baseline: `TF-IDF + LogisticRegression`;
-- sequence-модели на PyTorch: `Word2Vec + RNN`, `Word2Vec + LSTM`.
+- sequence-модели на PyTorch: `Word2Vec + RNN`, `Word2Vec + LSTM`, `Word2Vec + BiLSTM + Attention`.
 
-Текущий лучший кандидат по `macro F1` на test split: `Word2Vec + LSTM`.
+Текущий лучший кандидат по `macro F1` на test split: `Word2Vec + BiLSTM + Attention`.
 
 ## Задача
 
@@ -34,8 +34,9 @@ hf://datasets/k1tub/sentiment_dataset/data/train-00000-of-00001.parquet
 | `TF-IDF + LogisticRegression` | 0.7119 | 0.7127 | 0.7118 | 0.7122 | 0.7123 | - | - |
 | `Word2Vec + RNN` | 0.6882 | 0.6870 | 0.6881 | 0.6875 | 0.6876 | 0.6794 | 10 |
 | `Word2Vec + LSTM` | 0.7173 | 0.7196 | 0.7172 | 0.7175 | 0.7176 | 0.7112 | 10 |
+| `Word2Vec + BiLSTM + Attention` | 0.7209 | 0.7233 | 0.7209 | 0.7214 | 0.7215 | 0.7192 | 9 |
 
-По текущим результатам `LSTM` немного лучше baseline и RNN по test `macro F1`, поэтому именно она выбрана моделью по умолчанию для API.
+По текущим результатам `BiLSTM + Attention` показывает лучший test `macro F1`, поэтому именно она выбрана моделью по умолчанию для API.
 
 ## Архитектура
 
@@ -50,6 +51,7 @@ sentimental_analisys_project/
       logreg/
       rnn/
       lstm/
+      bilstm/
     plots/                     # графики обучения и confusion matrix
     reports/                   # classification reports и history
 
@@ -60,8 +62,8 @@ sentimental_analisys_project/
     dataset/                   # загрузка, очистка, torch Dataset
     embedding/                 # Word2Vec, vocab, embedding matrix
     inference/                 # predictor-ы и factory
-    model_training/            # train_logreg, train_rnn, train_lstm
-    models/                    # RNNModel, LSTMModel
+    model_training/            # train_logreg, train_rnn, train_lstm, train_bilstm
+    models/                    # RNNModel, LSTMModel, BiLSTMAttentionClassifier, AttentionLayer
     plots/                     # графики и classification reports
     streamlit_app/             # Streamlit UI
 
@@ -87,7 +89,7 @@ sentimental_analisys_project/
 Построение словаря, обучение Word2Vec и сборка `embedding_matrix`.
 
 `src/models/`
-PyTorch-архитектуры `RNNModel` и `LSTMModel`.
+PyTorch-архитектуры `RNNModel`, `LSTMModel`, `BiLSTMAttentionClassifier` и `AttentionLayer`.
 
 `src/model_training/`
 Скрипты обучения моделей, логирование в MLflow и сохранение локальных артефактов.
@@ -117,10 +119,10 @@ artifacts/models/logreg/
   tfidf_logreg.pkl
 ```
 
-Для `rnn` и `lstm`:
+Для `rnn`, `lstm` и `bilstm`:
 
 ```text
-artifacts/models/lstm/
+artifacts/models/<model_name>/
   model_state_dict.pt
   embedding_matrix.pt
   checkpoint.pt
@@ -205,6 +207,12 @@ python -m src.model_training.train_rnn
 
 ```powershell
 python -m src.model_training.train_lstm
+```
+
+Запуск BiLSTM + Attention:
+
+```powershell
+python -m src.model_training.train_bilstm
 ```
 
 Во время обучения:
@@ -305,7 +313,14 @@ docker compose up -d --build
 | FastAPI | `http://localhost:8000/docs` | Inference API |
 | Streamlit | `http://localhost:8501` | UI для пользователя |
 
-По умолчанию API в Docker использует LSTM:
+По умолчанию API в Docker использует BiLSTM + Attention:
+
+```yaml
+MODEL_NAME: bilstm
+MODEL_ARTIFACT_DIR: /app/artifacts/models/bilstm
+```
+
+Чтобы переключиться на LSTM:
 
 ```yaml
 MODEL_NAME: lstm
@@ -362,6 +377,7 @@ Registered model names:
 sentiment-review-classifier
 sentiment-review-rnn
 sentiment-review-lstm
+sentiment-review-bilstm
 ```
 
 В MLflow логируются:
@@ -394,6 +410,7 @@ artifacts/
 - обучение `TF-IDF + LogisticRegression`;
 - обучение `Word2Vec + RNN`;
 - обучение `Word2Vec + LSTM`;
+- обучение `Word2Vec + BiLSTM + Attention`;
 - сохранение локальных inference bundles;
 - логирование экспериментов в MLflow;
 - FastAPI inference service;
@@ -402,8 +419,7 @@ artifacts/
 
 Планируемые улучшения:
 
-- добавить `BiLSTM + Attention`;
-- добавить `Transformer BERT/ru-BERT`
+- добавить `Transformer BERT/ru-BERT`;
 - добавить загрузку champion-модели из MLflow через resolver;
 - добавить batch upload CSV в Streamlit;
 - добавить feedback endpoint для сбора ошибок модели.
