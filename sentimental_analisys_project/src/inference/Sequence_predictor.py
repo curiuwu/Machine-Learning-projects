@@ -11,6 +11,7 @@ from src.inference.BasePredictor import BasePredictor
 from src.config import ARTIFACTS_DIR
 from src.models.rnn import RNNModel
 from src.models.lstm import LSTMModel
+from src.models.bilstm import BiLSTMAttentionClassifier
 
 
 
@@ -103,6 +104,8 @@ class SequencePredictor(BasePredictor):
             model_cls = RNNModel
         elif model_type == "word2vec_lstm":
             model_cls = LSTMModel
+        elif model_type in {"word2vec_bilstm", "word2vec_bilstm_attention"}:
+            model_cls = BiLSTMAttentionClassifier
         else:
             raise ValueError(f"Unsupported model_type: {model_type}")
 

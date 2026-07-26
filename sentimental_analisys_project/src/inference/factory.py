@@ -19,7 +19,7 @@ def create_predictor(
         else:
             predictor = LogRegPredictor(artifacts_dir=artifacts_dir or ARTIFACTS_DIR)
 
-    elif model_name in {"rnn", "lstm"}:
+    elif model_name in {"rnn", "lstm", "bilstm"}:
         model_artifact_dir = Path(artifacts_dir) if artifacts_dir is not None else MODELS_DIR / model_name
         predictor = SequencePredictor(
             artifacts_dir=model_artifact_dir
